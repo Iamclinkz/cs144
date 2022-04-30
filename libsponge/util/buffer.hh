@@ -102,15 +102,18 @@ class BufferViewList {
     //!@{
 
     //! \brief Construct from a std::string
+    //将string类型转换为string_view类型
     BufferViewList(const std::string &str) : BufferViewList(std::string_view(str)) {}
 
     //! \brief Construct from a C string (must be NULL-terminated)
+    //从c语言的char*转换为string_view类型
     BufferViewList(const char *s) : BufferViewList(std::string_view(s)) {}
 
     //! \brief Construct from a BufferList
     BufferViewList(const BufferList &buffers);
 
     //! \brief Construct from a std::string_view
+    //从string_view类型转换一手
     BufferViewList(std::string_view str) { _views.push_back({const_cast<char *>(str.data()), str.size()}); }
     //!@}
 

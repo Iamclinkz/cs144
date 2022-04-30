@@ -16,6 +16,7 @@ class Address {
     //! \details A `sockaddr_storage` is enough space to store any socket address (IPv4 or IPv6).
     class Raw {
       public:
+        //可以放的下任意大小的socket地址,例如ipv4地址,ipv6地址等.本字段不但包括了地址,还包括了例如端口号,地址家族(family/domain)
         sockaddr_storage storage{};  //!< The wrapped struct itself.
         operator sockaddr *();
         operator const sockaddr *() const;

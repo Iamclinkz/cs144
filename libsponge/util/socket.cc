@@ -8,6 +8,8 @@
 
 using namespace std;
 
+////domain,type,protocol可以见学习笔记,通过指定domain指定比如是ipv4还是ipv6,通过type指定报文的类型是stream流式还是dgram数据报格式,
+//然后通过继承的方式,来指定第三层protocol,例如"TcpSocket"类就是一个具体的协议类型.
 // default constructor for socket of (subclassed) domain and type
 //! \param[in] domain is as described in [socket(7)](\ref man7::socket), probably `AF_INET` or `AF_UNIX`
 //! \param[in] type is as described in [socket(7)](\ref man7::socket)

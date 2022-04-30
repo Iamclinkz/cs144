@@ -39,6 +39,7 @@ FileDescriptor::FDWrapper::~FDWrapper() {
 FileDescriptor::FileDescriptor(const int fd) : _internal_fd(make_shared<FDWrapper>(fd)) {}
 
 //! Private constructor used by duplicate()
+//这里只接受一个移动构造函数,也就是使用other_shared_ptr的右值引用进行构造,这样可以增加other_shared_ptr的引用计数(亲测)
 FileDescriptor::FileDescriptor(shared_ptr<FDWrapper> other_shared_ptr) : _internal_fd(move(other_shared_ptr)) {}
 
 //! \returns a copy of this FileDescriptor

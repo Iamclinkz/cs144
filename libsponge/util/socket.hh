@@ -9,7 +9,7 @@
 #include <string>
 #include <sys/socket.h>
 
-//! \brief Base class for network sockets (TCP, UDP, etc.)
+//! \brief Base class for network sockets (TCP, UDP, etc.)所有的socket类型,例如"TCPSocket"就是继承自这里
 //! \details Socket is generally used via a subclass. See TCPSocket and UDPSocket for usage examples.
 class Socket : public FileDescriptor {
   private:
@@ -29,6 +29,9 @@ class Socket : public FileDescriptor {
     void setsockopt(const int level, const int option, const option_type &option_value);
 
   public:
+    //socket的操作
+
+    //bind:绑定
     //! Bind a socket to a specified address with [bind(2)](\ref man2::bind), usually for listen/accept
     void bind(const Address &address);
 
