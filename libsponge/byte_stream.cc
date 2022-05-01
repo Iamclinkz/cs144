@@ -50,7 +50,7 @@ void ByteStream::pop_output(const size_t len) {
         while(buf有空闲 && 发送的内容不为空)
             发送
             发送的内容 -= 本次发送的内容
-        input_ended()
+        end_input()
     接收方接收逻辑:
         while(!eof())
             接收

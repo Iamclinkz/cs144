@@ -4,16 +4,41 @@
 #include "byte_stream.hh"
 
 #include <cstdint>
+#include <set>
 #include <string>
+
+class Substring {
+  public:
+    Substring() = default;
+    std::string _str;  //实际存储substring
+    size_t _hh = 0;    //本substring的首个字节位于大字符串的位置
+    size_t _tt = 0;    //本substring的最后一个字节的后面一个字节位于大字符串的位置
+    size_t strLen() const { return _tt - _hh; }
+    Substring(const std::string &data, const uint64_t index);
+
+    // mergeable 查看两个substring是否可以合并,比如首个
+    bool mergeable(const Substring &other) const;
+
+    // doMerge 将另一个Substring融合到本substring中,返回融合之后增加的长度
+    void doMerge(const Substring &other);
+
+    bool operator<(const Substring &other) const { return this->_hh < other._hh; }
+};
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
 //! possibly overlapping) into an in-order byte stream.
 class StreamReassembler {
   private:
     // Your code here -- add private members as necessary.
-
-    ByteStream _output;  //!< The reassembled in-order byte stream
-    size_t _capacity;    //!< The maximum number of bytes
+    std::set<Substring> _substring_set = {};
+    size_t _current_len = 0;       //当前的所有substring的长度.
+    size_t _free_space;            //当前还剩下多少长度
+    size_t _should_write_idx = 0;  //当前应该写入的第一个字节
+    size_t _capacity;              //!< The maximum number of bytes
+    ByteStream _output;            //!< The reassembled in-order byte stream
+    bool _have_eof = false;
+    size_t _eof_pos = -1;
+    void doWrite();
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
