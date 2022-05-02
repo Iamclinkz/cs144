@@ -42,6 +42,21 @@ void Substring::doMerge(const Substring& other){
     this->_str = prefix + this->_str + suffix;
 }
 
+size_t StreamReassembler::get_window_size() const{
+/*
+运算逻辑:
+    1.如果当前set中的第一个substring的_hh跟当前的_should_write_idx不同,那么说明我们当前的window_size应该是
+    _cap大小,因为相当于希望收到的第一个byte还是_should_write_idx.
+    2.如果当前set中的第一个substring的_hh跟当前的_should_write_idx相同,那么说明第一个set的内容肯定是按顺序的,
+    只不过我们的byte_stream可能没空间写,所以暂时没写到里面去.所以当前的window_size应该是cap - 第一个set的
+    substring的大小.
+*/
+    // if(_substring_set.empty() || _substring_set.begin()->_hh != _should_write_idx)
+    //     return _capacity;
+    // else
+    //     return _capacity - _substring_set.begin()->strLen();
+    return _capacity - stream_out().buffer_size();
+}
 
 StreamReassembler::StreamReassembler(const size_t capacity) : _free_space(capacity),_capacity(capacity),_output(capacity) {}
 
@@ -73,9 +88,12 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
         return;
     }
 
-    if(_free_space < tmp_data.length()){
+    if(_free_space < tmp_data.length() || index + tmp_data.length() > _should_write_idx + _capacity){
         //如果不能完全的放下,那么需要截断一部分的字符串
-        tmp_data = tmp_data.substr(0,_free_space);
+        //从lab2发现的bug= =...例如cap是2,我们希望放"abc",先放入"bc"的话其实只应该存储"b"
+        size_t cap_len = _capacity-(index-_should_write_idx); 
+        size_t miner = min(cap_len,_free_space);
+        tmp_data = tmp_data.substr(0,miner);
     }
     //如果可以放下,并且当前tmp_data的eof为true的话,说明将tmp_data写到输入流就算写完了,所以设置eof
     auto new_ss = Substring(tmp_data,tmp_index);

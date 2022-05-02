@@ -20,6 +20,12 @@ class TCPReceiver {
     //! The maximum number of bytes we'll store.
     size_t _capacity;
 
+	//相当于标记了收到了isn
+	bool _isn_legal = false;
+	WrappingInt32 _isn = WrappingInt32(0);		//tcp报文的isn,只有当_isn_legal==true的时候才有效
+	bool in_window(const size_t&,const size_t&)const;
+	size_t get_checkpoint()const{return _reassembler.get_should_write_idx();}
+	bool _fin = false;
   public:
     //! \brief Construct a TCP receiver
     //!

@@ -43,23 +43,28 @@ struct TCPHeader {
     bool ack = false;           //!< ack flag
     bool psh = false;           //!< push flag
     bool rst = false;           //!< rst flag
-    bool syn = false;           //!< syn flag
-    bool fin = false;           //!< fin flag
+    bool syn = false;           //!< syn flag         如果设置了syn,那么载荷+1 byte
+    bool fin = false;           //!< fin flag         如果设置了fin,那么载荷+1 byte
     uint16_t win = 0;           //!< window size
     uint16_t cksum = 0;         //!< checksum
     uint16_t uptr = 0;          //!< urgent pointer
     //!@}
 
     //! Parse the TCP fields from the provided NetParser
+    //即用一个含有string的buf,生成一个NetParser对象,然后作为本函数的参数,用于给TCPHeader的各个字段赋值
+    //相当于解码
     ParseResult parse(NetParser &p);
 
     //! Serialize the TCP fields
+    //将本TCPHeader转换成可以发送的string格式,相当于编码.
     std::string serialize() const;
 
     //! Return a string containing a header in human-readable format
+    //相当于golang的String(),打印一手头部信息
     std::string to_string() const;
 
     //! Return a string containing a human-readable summary of the header
+    //打印标志位等信息.
     std::string summary() const;
 
     bool operator==(const TCPHeader &other) const;

@@ -46,6 +46,14 @@ class StreamReassembler {
     //! and those that have not yet been reassembled.
     StreamReassembler(const size_t capacity);
 
+    //用于得到第一个希望获取的stream index的字符的idx,其值相当于是 unwrap(ackno)-1
+    size_t get_should_write_idx() const { return _should_write_idx; }
+
+	//是不是所有的字符串都已经输出到_output中了,即本StreamReassembler的任务做完了
+    bool finish_reassembler() const {return _output.input_ended();}
+
+    //得到当前的窗口的大小
+    size_t get_window_size() const;
     //! \brief Receives a substring and writes any newly contiguous bytes into the stream.
     //!
     //! If accepting all the data would overflow the `capacity` of this

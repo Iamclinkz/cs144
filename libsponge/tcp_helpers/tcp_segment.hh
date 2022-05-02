@@ -30,6 +30,7 @@ class TCPSegment {
 
     //! \brief Segment's length in sequence space
     //! \note Equal to payload length plus one byte if SYN is set, plus one byte if FIN is set
+    //注意只是有效载荷的字节长度 + FIN,SYN(如果有的话)
     size_t length_in_sequence_space() const;
 };
 
