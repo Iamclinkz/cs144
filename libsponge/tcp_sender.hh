@@ -9,6 +9,52 @@
 #include <functional>
 #include <queue>
 
+//定时器,如果在工作,表示的是当前_unack_seg中的位于队头的pair有没有超时.
+class TCPTimer {
+  private:
+    bool _working = false;  //当前是否在工作
+    size_t _time = 0;       //当前距离超时的剩余时间
+  public:
+    TCPTimer() = default;
+
+    // work 开始以设定的时间(set_time)的计时工作
+    void work(size_t set_time) {
+        if (_working) {
+            return;
+        } else {
+            _working = true;
+            _time = set_time;
+        }
+    }
+
+    // refresh 由tick()函数调用,更新内部的时间,如果当前正在工作,并且已经超时,返回true,否则返回false,表示没有超时.
+    bool refresh(const size_t passed_time) {
+        if (!_working)
+            //如果没有在工作,直接返回false表示没有超时
+            return false;
+        else {
+            if ((_time -= passed_time) <= 0) {
+                //如果在工作,并且已经超时,那么返回true表示已经超时.
+                _working = false;
+                _time = 0;
+                return true;
+            } else {
+                //如果在工作但是没有超时,返回false
+                return false;
+            }
+        }
+    }
+
+    // stop 停止当前的计时器的计时工作
+    void stop() {
+        _working = false;
+        _time = 0;
+    }
+
+    // working 是否正在工作
+    bool working() { return _working; }
+};
+
 //! \brief The "sender" part of a TCP implementation.
 
 //! Accepts a ByteStream, divides it up into segments and sends the
@@ -31,6 +77,34 @@ class TCPSender {
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+
+	uint16_t _window_size = 1;
+	//超时使用,从_unack_seg中取出第一个tcpseg,并且重新发送一手
+    void do_resend();
+
+	//正常使用,发送一个tcpseg,并且进行timer的检查,放到_unack_seg中等工作.
+	void do_send(const TCPSegment&);
+
+	//当前的超时时间
+	size_t _rto;
+    size_t _max_recv_ackno = 0;
+	//因为queue不支持遍历,所以这个字段用于记录当前queue中有多少个有效载荷
+	size_t _bytes_in_flight = 0;
+	//size_t _first_unack_abs_seqno = 0;
+	//用于存放_unack_seg中的段的信息
+    struct SegInfo {
+        size_t absolute_seqno = 0;		//本段最后一个字符的下一个字符的在absolute seqno中的位置
+        u_char overtime_times = 0;		//本段超时次数
+		SegInfo(size_t seqno):absolute_seqno(seqno){}
+    };
+    //保存 <本段的SegInfo , 还没有收到确认的段>组成的pair
+    //如果发生了超时,则将队头的第一个发送出去.注意pair.first应该是在队列中有序的.
+    std::queue<std::pair<SegInfo, TCPSegment>> _unack_seg{};
+    //收到ack后,检查_unack_seg,查看其中得到确认的段,将其删除
+    void check_unack_seg(const size_t seqno);
+    TCPTimer _timer = {};
+    //是否已经发送了fin位
+	bool _sent_fin = false;
 
   public:
     //! Initialize a TCPSender
