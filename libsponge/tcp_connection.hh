@@ -21,6 +21,18 @@ class TCPConnection {
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
     bool _linger_after_streams_finish{true};
 
+	//lab4
+	//用于实现time_since_last_segment_received()方法
+    size_t _time_since_last_segment_received = 0;
+	//用于实现active()方法
+	bool _active = true;
+	//发送当前需要发送的所有段,从_sender中取出需要发送的端,结合当前的_receiver中的ack字段和win字段,
+	//将其填充到seg中并且发送出去.如果没要发的东西的话,不能捎带确认的话,单纯的发一个ack确认一手
+	void send_segs_in_sender();
+	bool _need_send_fin = false;
+	void clean_shutdown();
+	void force_shutdown();
+	void send_single_seg(TCPSegment& seg);
   public:
     //! \name "Input" interface for the writer
     //!@{
