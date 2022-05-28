@@ -67,6 +67,18 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
         } else {
             return;
         }
+    }else if(state() == TCPState::State::SYN_RCVD){
+        if(_receiver.segment_received(seg)){
+            //如果receiver检测到seg中的seqno是合法的话
+            _sender.ack_received(seg.header().ackno,seg.header().win);
+            check_recv();
+            send_segs_in_sender(seg.length_in_sequence_space());
+            return;
+        }else{
+            TCPSegment ret_seg {};
+            send_single_seg(ret_seg,seg.header().ackno);
+            return;
+        }
     }
 
     if (!_sender.ack_received(seg.header().ackno, seg.header().win) && !seg.header().rst) {
@@ -121,14 +133,14 @@ void TCPConnection::tick(const size_t ms_since_last_tick) {
     }
 
     _sender.tick(ms_since_last_tick);
-    
-    if(state() != TCPState::State::LISTEN){
-        send_segs_in_sender(false);
-    }
-
     if (_sender.consecutive_retransmissions() > TCPConfig::MAX_RETX_ATTEMPTS) {
         //如果超过了tcp的最大重复发送次数,关闭tcp连接
         force_shutdown(true, _sender.get_seqno());
+        return;
+    }
+    
+    if(state() != TCPState::State::LISTEN){
+        send_segs_in_sender(false);
     }
 }
 
@@ -140,12 +152,11 @@ void TCPConnection::end_input_stream() {
 void TCPConnection::connect() { send_segs_in_sender(); }
 
 TCPConnection::~TCPConnection() {
-    force_shutdown(true, _sender.get_seqno());
     try {
         if (active()) {
-            cerr << "Warning: Unclean shutdown of TCPConnection\n";
-
             // Your code here: need to send a RST segment to the peer
+            cerr << "Warning: Unclean shutdown of TCPConnection\n"; 
+            force_shutdown(true, _sender.get_seqno());
         }
     } catch (const exception &e) {
         std::cerr << "Exception destructing TCP FSM: " << e.what() << std::endl;

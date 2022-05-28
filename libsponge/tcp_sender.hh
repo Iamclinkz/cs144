@@ -94,7 +94,7 @@ class TCPSender {
     //用于存放_unack_seg中的段的信息
     struct SegInfo {
         size_t absolute_seqno = 0;  //本段最后一个字符的下一个字符的在absolute seqno中的位置
-        u_char overtime_times = 0;  //本段超时次数
+        size_t overtime_times = 0;  //本段超时次数
         SegInfo(size_t seqno) : absolute_seqno(seqno) {}
     };
     //保存 <本段的SegInfo , 还没有收到确认的段>组成的pair
