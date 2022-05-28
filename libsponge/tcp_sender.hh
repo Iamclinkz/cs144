@@ -13,7 +13,7 @@
 class TCPTimer {
   private:
     bool _working = false;  //当前是否在工作
-    size_t _time = 0;       //当前距离超时的剩余时间
+    long _time = 0;       //当前距离超时的剩余时间
   public:
     TCPTimer() = default;
 
@@ -78,24 +78,24 @@ class TCPSender {
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
 
-	uint16_t _window_size = 1;
-	//超时使用,从_unack_seg中取出第一个tcpseg,并且重新发送一手
+    uint16_t _window_size = 1;
+    //超时使用,从_unack_seg中取出第一个tcpseg,并且重新发送一手
     void do_resend();
 
-	//正常使用,发送一个tcpseg,并且进行timer的检查,放到_unack_seg中等工作.
-	void do_send(const TCPSegment&);
+    //正常使用,发送一个tcpseg,并且进行timer的检查,放到_unack_seg中等工作.
+    void do_send(const TCPSegment &);
 
-	//当前的超时时间
-	size_t _rto;
+    //当前的超时时间
+    size_t _rto;
     size_t _max_recv_ackno = 0;
-	//因为queue不支持遍历,所以这个字段用于记录当前queue中有多少个有效载荷
-	size_t _bytes_in_flight = 0;
-	//size_t _first_unack_abs_seqno = 0;
-	//用于存放_unack_seg中的段的信息
+    //因为queue不支持遍历,所以这个字段用于记录当前queue中有多少个有效载荷
+    size_t _bytes_in_flight = 0;
+    // size_t _first_unack_abs_seqno = 0;
+    //用于存放_unack_seg中的段的信息
     struct SegInfo {
-        size_t absolute_seqno = 0;		//本段最后一个字符的下一个字符的在absolute seqno中的位置
-        u_char overtime_times = 0;		//本段超时次数
-		SegInfo(size_t seqno):absolute_seqno(seqno){}
+        size_t absolute_seqno = 0;  //本段最后一个字符的下一个字符的在absolute seqno中的位置
+        u_char overtime_times = 0;  //本段超时次数
+        SegInfo(size_t seqno) : absolute_seqno(seqno) {}
     };
     //保存 <本段的SegInfo , 还没有收到确认的段>组成的pair
     //如果发生了超时,则将队头的第一个发送出去.注意pair.first应该是在队列中有序的.
@@ -104,9 +104,15 @@ class TCPSender {
     void check_unack_seg(const size_t seqno);
     TCPTimer _timer = {};
     //是否已经发送了fin位
-	bool _sent_fin = false;
+    bool _sent_fin = false;
 
   public:
+  //得到一个合法的seqno,如果发送队列不是空的,将发送队列中的首个段的seqno返回,否则返回seqno
+    WrappingInt32 get_seqno();
+    // lab4 当前是否已经发送了fin位
+    bool sent_fin() { return _sent_fin; }
+    //只是检测是不是合法
+    bool check_ack_legal(const WrappingInt32 ackno);
     //! Initialize a TCPSender
     TCPSender(const size_t capacity = TCPConfig::DEFAULT_CAPACITY,
               const uint16_t retx_timeout = TCPConfig::TIMEOUT_DFLT,

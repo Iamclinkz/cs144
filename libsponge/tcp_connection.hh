@@ -28,11 +28,17 @@ class TCPConnection {
 	bool _active = true;
 	//发送当前需要发送的所有段,从_sender中取出需要发送的端,结合当前的_receiver中的ack字段和win字段,
 	//将其填充到seg中并且发送出去.如果没要发的东西的话,不能捎带确认的话,单纯的发一个ack确认一手
-	void send_segs_in_sender();
+	void send_segs_in_sender(bool send_empty = true);
 	bool _need_send_fin = false;
-	void clean_shutdown();
-	void force_shutdown();
-	void send_single_seg(TCPSegment& seg);
+  	//查看有没有收到对方的fin or 有没有收到对方对于自己fin的ack
+	void check_recv();
+  //强行关闭连接,设置error并且设置_active为false.如果send_rst为true,需要给peer发送rst
+	void force_shutdown(bool send_rst,const WrappingInt32&);
+	void send_single_seg(TCPSegment& seg,const WrappingInt32&);
+
+	bool _recv_peer_fin = false;		//是否收到了对方的eof
+	bool _recv_my_fin_ack = false;		//是否收到了对方对于自己的fin的ack
+
   public:
     //! \name "Input" interface for the writer
     //!@{

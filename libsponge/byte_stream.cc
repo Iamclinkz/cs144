@@ -59,7 +59,8 @@ void ByteStream::end_input() {
     this->_eof = true;
 }
 
-//这个api是看发送方是不是从此不发送了.
+//这个api是看发送方是不是从此不发送了(注意,为true只是表示发送方从此不发东西了,不保证当前
+//buf内没有东西,也就是说现在buf中的东西就是所有剩余的东西了).
 bool ByteStream::input_ended() const {
     return this->_eof;
 }

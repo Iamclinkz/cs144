@@ -114,6 +114,16 @@ bool TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     }
 }
 
+bool TCPSender::check_ack_legal(const WrappingInt32 ackno) {
+    size_t seqno = unwrap(ackno, _isn, _max_recv_ackno);
+    if (seqno > _next_seqno || seqno == 0) {
+        //如果seqno确认的是当前还没发的字节,那么非法,返回false
+        return false;
+    } else {
+        return true;
+    }
+} 
+
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void TCPSender::tick(const size_t ms_since_last_tick) {
     bool overtime = _timer.refresh(ms_since_last_tick);
@@ -166,5 +176,13 @@ void TCPSender::check_unack_seg(const size_t ack_abs_seqno) {
             //根据lab3.pdf,如果当前还有未被确认的seg,那么重新定时定时器.
             _timer.work(_rto);
         }
+    }
+}
+
+WrappingInt32 TCPSender::get_seqno(){
+    if(!_unack_seg.empty()){
+        return _unack_seg.front().second.header().seqno ;
+    }else{
+        return next_seqno();
     }
 }
