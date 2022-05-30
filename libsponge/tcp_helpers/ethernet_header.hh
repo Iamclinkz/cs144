@@ -20,11 +20,11 @@ struct EthernetHeader {
     static constexpr uint16_t TYPE_IPv4 = 0x800;  //!< Type number for [IPv4](\ref rfc::rfc791)
     static constexpr uint16_t TYPE_ARP = 0x806;   //!< Type number for [ARP](\ref rfc::rfc826)
 
-    //! \name Ethernet header fields
+    //! \name Ethernet header fields,14字节的以太网首部
     //!@{
-    EthernetAddress dst;
-    EthernetAddress src;
-    uint16_t type;
+    EthernetAddress dst;        //6byte的目的mac地址
+    EthernetAddress src;        //6byte的源mac地址
+    uint16_t type;              //2byte的帧类型,对于arp请求和arp应答为0x806,对于ipv4这个值为0x800
     //!@}
 
     //! Parse the Ethernet fields from the provided NetParser
