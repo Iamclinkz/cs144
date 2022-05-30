@@ -49,6 +49,33 @@ class Router {
     //! datagram's destination address.
     void route_one_datagram(InternetDatagram &dgram);
 
+    // lab6
+    struct RouteEntry {
+        uint32_t route_prefix = 0;            //前缀,例如 1.2.0.0/16中的 1 * 2^24 + 2 * 2^16
+        uint8_t prefix_length = 0;            //前缀的长度
+        std::optional<Address> next_hop{};  //对应的下一跳的路由器的ip地址,如果是直连的话,此字段为nullopt
+        size_t interface_num = 0;             //对应的是路由器的哪个口
+        RouteEntry(const uint32_t _route_prefix,
+                   const uint8_t _prefix_length,
+                   const std::optional<Address> _next_hop,
+                   const size_t _interface_num) {
+            this->route_prefix = _route_prefix;
+            this->next_hop = _next_hop;
+            this->interface_num = _interface_num;
+            this->prefix_length = _prefix_length;
+        }
+        //查看给定的ip_addr是否跟本entry匹配
+        bool match_ip(uint32_t ip_addr){
+            if(prefix_length == 0){
+                //如果是比如0.0.0.0/0这种的,无论ip是多少都能匹配上
+                return true;
+            }else{
+                return !(ip_addr >> (32 - prefix_length) ^ route_prefix >>  (32 - prefix_length));
+            }
+        }
+    };
+    std::vector<RouteEntry> _route_entry_list{};
+
   public:
     //! Add an interface to the router
     //! \param[in] interface an already-constructed network interface

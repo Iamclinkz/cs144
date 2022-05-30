@@ -16,7 +16,7 @@ using namespace std;
 // You will need to add private members to the class declaration in `router.hh`
 
 template <typename... Targs>
-void DUMMY_CODE(Targs &&... /* unused */) {}
+void DUMMY_CODE(Targs &&.../* unused */) {}
 
 //! \param[in] route_prefix The "up-to-32-bit" IPv4 address prefix to match the datagram's destination address against
 //! \param[in] prefix_length For this route to be applicable, how many high-order (most-significant) bits of the route_prefix will need to match the corresponding bits of the datagram's destination address?
@@ -29,14 +29,30 @@ void Router::add_route(const uint32_t route_prefix,
     cerr << "DEBUG: adding route " << Address::from_ipv4_numeric(route_prefix).ip() << "/" << int(prefix_length)
          << " => " << (next_hop.has_value() ? next_hop->ip() : "(direct)") << " on interface " << interface_num << "\n";
 
-    DUMMY_CODE(route_prefix, prefix_length, next_hop, interface_num);
-    // Your code here.
+    _route_entry_list.push_back(RouteEntry(route_prefix, prefix_length, next_hop, interface_num));
 }
 
 //! \param[in] dgram The datagram to be routed
 void Router::route_one_datagram(InternetDatagram &dgram) {
-    DUMMY_CODE(dgram);
-    // Your code here.
+    if ((dgram.header().ttl--) <= 1 || _route_entry_list.empty()) {
+        //检查ttl,注意ttl是uint8_t类型的
+        return;
+    }
+    int max_match_len = -1;
+    RouteEntry *max_match_entry = nullptr;
+    for (size_t i = 0; i < _route_entry_list.size(); i++) {
+        if (_route_entry_list[i].match_ip(dgram.header().dst) && max_match_len < _route_entry_list[i].prefix_length) {
+            max_match_len = _route_entry_list[i].prefix_length;
+            max_match_entry = &_route_entry_list[i];
+        }
+    }
+    if (max_match_len != -1) {
+        if (max_match_entry->next_hop == nullopt) {
+            _interfaces[max_match_entry->interface_num].send_datagram(dgram,Address::from_ipv4_numeric(dgram.header().dst));
+        }else{
+            _interfaces[max_match_entry->interface_num].send_datagram(dgram,max_match_entry->next_hop.value());
+        }
+    }
 }
 
 void Router::route() {
